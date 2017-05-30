@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+<meta charset="utf-8">
+<style>
+
+.view {
+  fill: #ADD8E6;
+  stroke: #FFF;
+  stroke-width: "1px"
+
+}
+
+</style>
+<body>
+
+<div class="legend"></div>
+<div class="view" id="map"></div>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<script src="https://d3js.org/d3.v3.min.js"></script>
+<script src="https://d3js.org/topojson.v1.min.js"></script>
+<script>
+
+// Canvas size
+var width = $("#map").width();
+//var width = 900;
+var height = 600,
+  active = d3.select(null);
+
+// Map properties
+var projection = d3.geo.mercator()
+  .scale(300)
+  .translate([width / 2, 280])
+  .center([-48,-11])
+  .precision(0);
+
+var path = d3.geo.path()
+  .projection(projection);
+
+var svg = d3.select("#map").append("svg")
+  .attr("width", width)
+  .attr("height", height);
+
+
+var g = svg.append("g")
+  .style("stroke-width", "1px");
+
+mapfile = "la.json";
+
+d3.json(mapfile, function(error, la) {
+  countries = topojson.feature(la, la.objects.countries);
+
+  g.selectAll(".country")
+    .data(topojson.feature(la, la.objects.countries).features)
+    .enter().append("path")
+      .attr("class", "feature")
+      .attr("class", function(d) { return "country " + d.properties.category; })
+      .attr("d", path)
+      .on("click", onCountryClick)
+
+  g.append("path")
+    .datum(topojson.mesh(la, la.objects.countries, function(a, b) { return a !== b }))
+    .attr("class", "mesh")
+    .attr("d", path)
+    .attr("class", "country-boundary"); 
+});
+
+var onCountryClick = function(d) {
+  //clearCities();
+  $("#reset-button").show();
+  $("#compare-button").show();
+  placeId = d.id;
+  countryName = d.properties.name;
+  //filter cities
+
+  
+  $("#mainTitle").text(countryName);
+  $("#col-main").show();
+  
+  small = ["COR", "DOM", "ECU", "GUA", "HON",  "NIC", "PAN", "PAR", "URU"];
+  large = ["ARG", "BRA", "CHI", "MEX"];
+
+  // Default zoom scale.
+  size = 0.5
+
+  // Zoom scale for small countries.
+  for (i = 0; i < small.length; i++) {
+        if (small[i] === d.id) { size = 0.2 };
+    }
+
+    // Zoom scale for large countries.
+    for (i = 0; i < large.length; i++) {
+        if (large[i] === d.id) { size = 0.85 };
+    }
+
+  d3.select(this)
+    .on("mouseover", function() {
+          d3.select(this).attr("class", function(d) { return "country " + d.properties.category; });
+  });
+
+  if (active.node() === this) {
+    return resetMap();
+  }
+      
+  active.classed("active", false);
+  active = d3.select(this).classed("active", true);
+  
+  var bounds = path.bounds(d),
+    dx = bounds[1][0] - bounds[0][0],
+    dy = bounds[1][1] - bounds[0][1],
+    x = (bounds[0][0] + bounds[1][0]) / 2,
+    y = (bounds[0][1] + bounds[1][1]) / 2,
+    scale = size / Math.max(dx / width, dy / height),
+    translate = [width / 2 - scale * x, height / 2 - scale * y];
+  g.transition()
+    .duration(750)
+    .style("stroke-width", 1.5 / scale + "px")
+    .attr("transform", "translate(" + translate + ")scale(" + scale + ")");
+};
+
+var resetMap = function() {
+  //clearCities();
+  //hidePanels();
+  $("#reset-button").hide();
+  active.classed("active", false);
+  active = d3.select(null);
+
+  g.transition()
+    .duration(750)
+    .style("stroke-width", "1px")
+    .attr("transform", "");
+
+  g.selectAll(".country")
+    .on("mouseover", function() {
+          d3.select(this).attr("class", "country-hover");
+  });
+};
+
+d3.select(self.frameElement).style("height", height + "px");
+
+var drawMenuIcon = function() {
+  var svgMenu = d3.select("#map").append("svg")
+      .attr("width", 200)
+      .attr("height", 200);
+  svgMenu.append("rect").attr("rx",4).attr("ry",4).attr("x",1).attr("y",0).attr("width",150).attr("height",50).attr("class","legend").style("fill","#eff3ff");
+
+  svgMenu
+    .on("mouseover", function(d) {
+      d3.select(svgMenu).style("fill", "red");
+    })
+    .on("mouseout", function() {
+      svgMenu.style("fill", "black");
+    });
+};
+
+</script>
+</body>
+</html>
