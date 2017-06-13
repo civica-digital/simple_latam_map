@@ -58,11 +58,6 @@ d3.json(mapfile, function(error, la) {
       .attr("d", path)
       .on("click", onCountryClick)
 
-  g.append("path")
-    .datum(topojson.mesh(la, la.objects.countries, function(a, b) { return a !== b }))
-    .attr("class", "mesh")
-    .attr("d", path)
-    .attr("class", "country-boundary"); 
 });
 
 var onCountryClick = function(d) {
@@ -73,10 +68,10 @@ var onCountryClick = function(d) {
   countryName = d.properties.name;
   //filter cities
 
-  
+
   $("#mainTitle").text(countryName);
   $("#col-main").show();
-  
+
   small = ["COR", "DOM", "ECU", "GUA", "HON",  "NIC", "PAN", "PAR", "URU"];
   large = ["ARG", "BRA", "CHI", "MEX"];
 
@@ -101,10 +96,10 @@ var onCountryClick = function(d) {
   if (active.node() === this) {
     return resetMap();
   }
-      
+
   active.classed("active", false);
   active = d3.select(this).classed("active", true);
-  
+
   var bounds = path.bounds(d),
     dx = bounds[1][0] - bounds[0][0],
     dy = bounds[1][1] - bounds[0][1],
